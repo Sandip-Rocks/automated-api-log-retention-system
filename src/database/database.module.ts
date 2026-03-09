@@ -1,21 +1,30 @@
 import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Database } from './database';
 import { ApiLog } from '../../sequelize/models/api-log.model';
 
 @Module({
   imports: [
-    SequelizeModule.forRoot({
-      dialect: 'postgres',
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT) || 5432,
-      username: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'password',
-      database: process.env.DB_NAME || 'api_logs',
-      autoLoadModels: true,
-      synchronize: false, // Disable auto-sync for production, use migrations instead
-      logging: process.env.NODE_ENV === 'development' ? console.log : false,
-      models: [ApiLog], // Explicitly add models
+    ConfigModule,
+    SequelizeModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        dialect: 'postgres',
+        host: configService.get<string>('DB_HOST') || 'localhost',
+        port: configService.get<number>('DB_PORT') || 5432,
+        username: configService.get<string>('DB_USERNAME') || 'postgres',
+        password: configService.get<string>('DB_PASSWORD') || 'password',
+        database: configService.get<string>('DB_NAME') || 'api_logs',
+        autoLoadModels: true,
+        synchronize: false, // Disable auto-sync for production, use migrations instead
+        logging:
+          configService.get<string>('NODE_ENV') === 'development'
+            ? console.log
+            : false,
+        models: [ApiLog], // Explicitly add models
+      }),
+      inject: [ConfigService],
     }),
   ],
   providers: [Database],

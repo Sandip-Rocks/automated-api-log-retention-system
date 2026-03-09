@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { Sequelize } from 'sequelize-typescript';
 
 @Injectable()
-export class Database {
+export class Database implements OnModuleInit, OnModuleDestroy {
   constructor(private sequelize: Sequelize) {}
 
   async onModuleInit() {
